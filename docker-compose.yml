@@ -1,0 +1,31 @@
+# VN Affiliate Shop — 1 lệnh là chạy: docker compose up -d
+# Nút "Deploy to Hostinger" dùng chính tệp này. Mã nguồn được tải từ GitHub khi container khởi động,
+# dữ liệu (CSDL SQLite, cài đặt) nằm trong volume shop_data nên không mất khi cập nhật.
+services:
+  shop:
+    image: php:8.3-apache
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:80"
+    environment:
+      SITE_NAME: ${SITE_NAME:-}
+      SITE_LANG: ${SITE_LANG:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      AFFILIATE_TEMPLATE: ${AFFILIATE_TEMPLATE:-}
+      SUB_ID: ${SUB_ID:-}
+      SITE_URL: ${SITE_URL:-}
+      APP_REF: ${APP_REF:-main}
+      DATA_DIR: /data
+    volumes:
+      - shop_data:/data
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        rm -rf /opt/app && mkdir -p /opt/app
+        curl -fsSL "https://codeload.github.com/ntm4131/vn-affiliate-shop/tar.gz/$${APP_REF}" | tar xz --strip-components=1 -C /opt/app
+        sh /opt/app/docker/apache.sh
+        exec apache2-foreground
+volumes:
+  shop_data:
